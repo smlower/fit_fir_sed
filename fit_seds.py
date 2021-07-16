@@ -14,7 +14,7 @@ galaxy = int(sys.argv[1])
 fitfunc = greybody
 print(f'using {fitfunc.__name__} model to fit FIR SED')
 fixpar = [False,False,100e-6,False, 0] #fixing peak FIR SED wavelength to 100 micron
-thisfix = [True, True, False, True, False]
+free_params = [False, False, True, False, True]
 #put our best fit SED plot here                          
 plotfile = f'testfit_SED_galaxy{galaxy}.png'
 #and put out fit results here
@@ -29,7 +29,7 @@ errors = flux * 0.03 #putting fake error bars on
 num_processes = 8
 print('running emcee')
 pool = emcee.interruptible_pool.InterruptiblePool(processes=num_processes)
-chains,fits,stds,sed = sedfit_mcmc(fitfunc,wavelengths,flux,errors,fixed=thisfix,
+chains,fits,stds,sed = sedfit_mcmc(fitfunc,wavelengths,flux,errors,fixed=free_params,
               plotfile=plotfile,mcmcsteps=[300,150,150],pool=pool)
 pool.terminate()
 
