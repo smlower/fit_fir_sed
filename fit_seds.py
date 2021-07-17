@@ -13,7 +13,7 @@ galaxy = int(sys.argv[1])
 #Model parameters. For greybody, these are [normalization,Td,L0(in m),beta, redshift]
 fitfunc = greybody
 print(f'using {fitfunc.__name__} model to fit FIR SED')
-fit_params = [False,False,100e-6,False, 0] #fixing peak FIR SED wavelength to 100 micron
+fit_params = [False,False,100e-6,False, 1e-10] #fixing peak FIR SED wavelength to 100 micron. fixing redshift to very small number because 0 can fuck things up
 #put our best fit SED plot here                          
 plotfile = f'testfit_SED_galaxy{galaxy}.png'
 #and put out fit results here
