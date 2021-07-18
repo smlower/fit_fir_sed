@@ -27,8 +27,8 @@ def get_pd_sed(galaxy, fir_only=False):
 
     #do we only want FIR SED?
     if fir_only:
-        fir = find_nearest(wave.to(u.micron).value, 50) #we'll define FIR as the part of the SED spanning from 50 micron to 1000 micron
-        fir_wave = wave[fir:].to(u.micron)
+        fir = find_nearest(wav.to(u.micron).value, 50) #we'll define FIR as the part of the SED spanning from 50 micron to 1000 micron
+        fir_wave = wav[fir:].to(u.micron)
         fir_flux = flux[fir:]
     return fir_wave.value, fir_flux.value
 
