@@ -229,6 +229,7 @@ def sedfit_mcmc(fitfunc,um_data,mjy_data,mjy_errors,lensmodelpars=None,p0=None,f
       um_rest_ir = np.linspace(8.,1000.,400)
       fir = ((um_rest_ir>42.5) & (um_rest_ir<122.5))
       LIR,LFIR,Tpeak = [],[],[]
+      print('getting LFIR')
       for i in range(chains.shape[0]):
             Sfit = fitfunc(1e-6*um_rest_ir,*chains[i,:],cosmo=cosmo)
             LIR.append(get_luminosity(Lambdas=um_rest_ir*(1+chains[i,-1]),Snu=Sfit,distance=DL))
@@ -241,7 +242,8 @@ def sedfit_mcmc(fitfunc,um_data,mjy_data,mjy_errors,lensmodelpars=None,p0=None,f
       Sfit = fitfunc(1e-6*um_rest_ir,*fits[:-3],cosmo=cosmo)
       a = np.percentile(chains,[15.87,84.13],axis=0)
       stds = np.abs(a[0,:] - a[1,:])/2.
-      
+      print(f'chains = {chains}')
+      print(f'   LFIR = {np.median(LFIR)}')
       if plotfile is not None:
             freepars = np.where(np.asarray(fixed)==0)[0]
             freepars = np.append(freepars,fits.size-2) # always plot LFIR

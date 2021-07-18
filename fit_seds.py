@@ -25,10 +25,10 @@ wavelengths, flux = get_pd_sed(galaxy=galaxy, fir_only=True) #wavelengths in mic
 errors = flux * 0.03 #putting fake error bars on
 
 #set up pool for multi processing. depending on how many cores you give your job, edit num_processes
-num_processes = 8
+num_processes = 15
 print('running emcee')
 pool = emcee.interruptible_pool.InterruptiblePool(processes=num_processes)
-chains,fits,stds,sed = sedfit_mcmc(fitfunc,wavelengths,flux,errors,fixed=fit_params,
+chains,fits,stds,sed = sedfit_mcmc(fitfunc,wavelengths[::5],flux[::5],errors[::5],fixed=fit_params,
               plotfile=plotfile,mcmcsteps=[300,150,150],pool=pool)
 pool.terminate()
 

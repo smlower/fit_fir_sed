@@ -30,5 +30,5 @@ def get_pd_sed(galaxy, fir_only=False):
         fir = find_nearest(wav.to(u.micron).value, 50) #we'll define FIR as the part of the SED spanning from 50 micron to 1000 micron
         fir_wave = wav[fir:].to(u.micron)
         fir_flux = flux[fir:]
-    return fir_wave.value, fir_flux.value
+    return fir_wave.value, fir_flux.value / np.max(fir_flux.value) #returning normalized flux
 
