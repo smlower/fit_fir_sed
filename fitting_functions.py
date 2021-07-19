@@ -1,33 +1,15 @@
 import numpy as np
 from astropy.constants import c, k_B, h
 from astropy.cosmology import Planck15
-
+import astropy.units as u
 
 __all__ = ['B_lambda','B_nu','greybody','greybody_powerlaw',
             'greybody_sourcesize']
-            
-# This file just holds various possible fitting functions, etc.
 
-# Ditch astropy's units, they're all in SI
-c, k_B, h = c.value, k_B.value, h.value
-
-def B_lambda(lambdas,T):
-      """
-      Return the Planck blackbody function in SI wavelength units,
-      W sr^-1 m^-3.
-      
-      Parameters:
-      lambdas: float or array of floats, units of m
-            Wavelength(s) where B_lambdas is to be evaluated
-      T: float, units of K
-            Blackbody temperature. 
-      
-      Returns:
-      B_lambda: float or array of floats, units of W sr^-1 m^-3
-            Planck function evaluated at given lambdas and T
-      """
-      return 2.0 * h * c**2 / (lambdas**5 * (np.exp(h*c/(lambdas * k_B * T)) - 1.0))
-      
+def B_lambda(wav, T):
+      from astropy.modeling.blackbody import blackbody_lambda
+      flux = blackbody_lambda(wav, T)
+      return flux * (4. * np.pi * u.sr) * (10*u.pc).to(u.cm)**2 * wav.to(u.Angstrom)
 def B_nu(nu,T):
       """
       Return the Planck blackbody function in SI frequency units,
@@ -44,9 +26,9 @@ def B_nu(nu,T):
             Planck function evaluated at given nu and T
       """
       
-      return 2.0 * h * nu**3. * c**-2. / (np.exp(h*nu/(k_B * T)) - 1.0)
+      return 2.0 * h.value * nu**3. * c.value**-2. / (np.exp(h.value*nu/(k_B.value * T)) - 1.0)
       
-def greybody(lambdas,amp,Tdust=35.,L0=1e-4,beta=2.0,z=0.,cosmo=Planck15):
+def greybody(lambdas,amp,Tdust=35.,L0=1e-4,beta=2.0):
       """
       Calculate the modified blackbody function ('greybody').
       Note that this equation does match da Cunha et al 2013 eq 17 (2nd line).
@@ -74,12 +56,13 @@ def greybody(lambdas,amp,Tdust=35.,L0=1e-4,beta=2.0,z=0.,cosmo=Planck15):
       Returns:
       gbb: array of floats, units related to Jy (scaled by ::amp::)
       """
-      Tcmb = 2.73 #[Kelvin] since we're dealing with z=0
+      L0 = L0 * u.micron
+      Tcmb = 2.73 #[Kelvin] since we're dealing with z=0                                                                                                      
       gbb = (B_lambda(lambdas,Tdust)-B_lambda(lambdas,Tcmb))
       taudust = (L0/lambdas)**beta
-      gbb = amp * gbb * (lambdas/L0)**2 * (1-np.exp(-taudust))
-      
-      return gbb
+      gbb = amp * gbb.value * (lambdas/L0)**2 * (1-np.exp(-taudust))
+      #multiply by amp to fix any weird DL issues
+      return gbb * (u.erg / u.s)
       
 def greybody_powerlaw(lambdas,amp,Tdust=35.,L0=1e-4,beta=2.0,alpha=2.0,z=0.,cosmo=Planck15):
       """

@@ -13,7 +13,8 @@ galaxy = int(sys.argv[1])
 #Model parameters. For greybody, these are [normalization,Td,L0(in m),beta, redshift]
 fitfunc = greybody
 print(f'using {fitfunc.__name__} model to fit FIR SED')
-fit_params = [False,False,100e-6,False, 1e-10] #fixing peak FIR SED wavelength to 100 micron. fixing redshift to very small number because 0 can fuck things up
+params = ['amp', 'Td', 'L0', 'beta']
+fit_params = [False,False,100,False] #fixing peak FIR SED wavelength to 100 micron
 #put our best fit SED plot here                          
 plotfile = f'testfit_SED_galaxy{galaxy}.png'
 #and put out fit results here
@@ -21,14 +22,15 @@ resultsfile = f'testfit_galaxy{galaxy}.hdf5'
 
 #load powderday SED
 print('loading pd SED')
-wavelengths, flux = get_pd_sed(galaxy=galaxy, fir_only=True) #wavelengths in micron, flux in mJy
-errors = flux * 0.03 #putting fake error bars on
+wavelengths, flux = get_pd_sed(galaxy=galaxy, fir_only=True) #wavelengths in micron, flux in erg /s --> actually luminosity so bad label!
+errors = flux * 0.3 #putting fake error bars on
 
 #set up pool for multi processing. depending on how many cores you give your job, edit num_processes
 num_processes = 15
 print('running emcee')
 pool = emcee.interruptible_pool.InterruptiblePool(processes=num_processes)
-chains,fits,stds,sed = sedfit_mcmc(fitfunc,wavelengths[::5],flux[::5],errors[::5],fixed=fit_params,
+
+chains,fits,stds,sed = sedfit_mcmc(fitfunc,wavelengths[::10],flux[::10],errors[::10],params=params,fixed=fit_params,
               plotfile=plotfile,mcmcsteps=[300,150,150],pool=pool)
 pool.terminate()
 

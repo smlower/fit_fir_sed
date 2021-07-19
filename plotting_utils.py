@@ -107,22 +107,22 @@ def marginalize_1d(x,axobj,*args,**kwargs):
       return axobj
       
 
-def plot_sed(um_rest,Sfit,um_data,mjy_data,mjy_errors,z,axobj,*args,**kwargs):
+def plot_sed(um_rest,Sfit,um_data,mjy_data,mjy_errors,axobj,*args,**kwargs):
       """
       Plot an SED
       """
       sedcolor = kwargs.pop('sedcolor','b')
       
       axobj.set_axis_on()
-      axobj.plot(um_rest*(1+z),Sfit,color=sedcolor,ls='-')
+      axobj.plot(um_rest,Sfit,color=sedcolor,ls='-')
       axobj.set_xscale('log'); axobj.set_yscale('log')
       axobj.set_xlabel('$\\lambda_{obs}$, $\\mu m$')
       axobj.set_ylabel('S$_{\\nu}$, mJy')
-      axobj.set_xlim(1.1*(1+z)*um_rest.max(),0.8*(1+z)*um_rest.min())
-      axobj.set_ylim(0.5*mjy_data[mjy_data>0.].min(),2*Sfit.max())
+      axobj.set_xlim(1.1**um_rest.max(),0.8*(1+z)*um_rest.min())
+      axobj.set_ylim(0.5*mjy_data[mjy_data>0.].min(),2*np.max(Sfit))
       
       altax = axobj.twiny()
-      altax.set_xlim(axobj.get_xlim()[0]/(1.+z),axobj.get_xlim()[1]/(1+z))
+      altax.set_xlim(axobj.get_xlim()[0],axobj.get_xlim()[1])
       altax.set_ylim(axobj.get_ylim()[0],axobj.get_ylim()[1])
       altax.set_xscale('log'); altax.set_xlabel('$\\lambda_{rest}$, $\\mu m$')
       
@@ -228,13 +228,13 @@ def triangleplot(samples,labels):
 
 
 def make_outputplot(plotfile,samples,labels,plotsed=True,um_rest=None,
-      Sfit=None,um_data=None, mjy_data=None,mjy_errors=None,z=None):
+      Sfit=None,um_data=None, mjy_data=None,mjy_errors=None):
       """
       Assemble the whole output thing.
       """
       
       f,axarr = triangleplot(samples,labels)
-      if plotsed: trcax = plot_sed(um_rest,Sfit,um_data,mjy_data,mjy_errors,z,axarr[0,-1])
+      if plotsed: trcax = plot_sed(um_rest,Sfit,um_data,mjy_data,mjy_errors,axarr[0,-1])
       textax = text_summary(samples,labels,axarr[0,-2])
       
       f.subplots_adjust(left=0.1,right=0.97,bottom=0.1,top=0.95,hspace=0,wspace=0)

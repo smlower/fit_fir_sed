@@ -18,17 +18,10 @@ def get_pd_sed(galaxy, fir_only=False):
     wave  = np.asarray(wave)*u.micron #wav is in micron                                                                                                      
     wav = wave[::-1].to(u.AA)
     flux = np.asarray(flx)[::-1]*u.erg/u.s
-    dl = 10*u.pc
-    flux /= (4.*3.14*dl**2.)
-    nu = constants.c.cgs/(wav.to(u.cm))
-    nu = nu.to(u.Hz)
-    flux /= nu
-    flux = flux.to(u.mJy)
-
     #do we only want FIR SED?
     if fir_only:
         fir = find_nearest(wav.to(u.micron).value, 50) #we'll define FIR as the part of the SED spanning from 50 micron to 1000 micron
         fir_wave = wav[fir:].to(u.micron)
         fir_flux = flux[fir:]
-    return fir_wave.value, fir_flux.value / np.max(fir_flux.value) #returning normalized flux
+    return fir_wave, fir_flux
 
