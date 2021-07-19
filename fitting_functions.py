@@ -1,33 +1,19 @@
 import numpy as np
-from astropy.constants import c, k_B, h
 from astropy.cosmology import Planck15
 import astropy.units as u
 
-__all__ = ['B_lambda','B_nu','greybody','greybody_powerlaw',
-            'greybody_sourcesize']
+__all__ = ['B_lambda','B_nu','greybody','greybody_powerlaw']
 
 def B_lambda(wav, T):
       from astropy.modeling.blackbody import blackbody_lambda
       flux = blackbody_lambda(wav, T)
       return flux * (4. * np.pi * u.sr) * (10*u.pc).to(u.cm)**2 * wav.to(u.Angstrom)
 def B_nu(nu,T):
-      """
-      Return the Planck blackbody function in SI frequency units,
-      W sr^-1 m^-2 Hz^-1
-      
-      Parameters:
-      nu: float or array of floats, units of Hz
-            Frequency(ies) where B_nu is to be evaluated
-      T: float, units of K
-            Blackbody temperature. 
-      
-      Returns:
-      bb: float or array of floats, units of W sr^-1 m^-2 Hz^-1
-            Planck function evaluated at given nu and T
-      """
-      
-      return 2.0 * h.value * nu**3. * c.value**-2. / (np.exp(h.value*nu/(k_B.value * T)) - 1.0)
-      
+      #for dust mass calculation
+      from astropy.modeling.blackbody import blackbody_nu
+      flux = blackbody_nu(nu, T)
+      return (flux * (4. * np.pi * u.sr)).to(u.mJy)
+
 def greybody(lambdas,amp,Tdust=35.,L0=1e-4,beta=2.0):
       """
       Calculate the modified blackbody function ('greybody').
@@ -65,6 +51,8 @@ def greybody(lambdas,amp,Tdust=35.,L0=1e-4,beta=2.0):
       return gbb * (u.erg / u.s)
       
 def greybody_powerlaw(lambdas,amp,Tdust=35.,L0=1e-4,beta=2.0,alpha=2.0,z=0.,cosmo=Planck15):
+      # Not cleaned yet !
+
       """
       Same as a regular greybody at long wavelengths (>~100um), but instead
       joins the short wavelength Wien side with a power-law of slope alpha.
@@ -109,43 +97,5 @@ def greybody_powerlaw(lambdas,amp,Tdust=35.,L0=1e-4,beta=2.0,alpha=2.0,z=0.,cosm
       powerlaw = amppl * lambdas**alpha * np.exp(-(lambdas/Lc)**2.)
       return gbb + powerlaw
       
-def greybody_sourcesize(lambdas,reff,amp=None,Tdust=35.,L0=1e-4,beta=2.0,
-      z=0.,cosmo=Planck15):
-      """
-      Same as the regular greybody, but in this case, instead of using an
-      arbitrary normalizing scale factor, we assume we know the actual emitting
-      area of the source, which is directly related to the greybody normalization.
-      This should be used by sedfit_mcmc if lensmodelpars is passed to the likelihood
-      function.
-      
-      Parameters:
-      lambdas: float or array of floats, units of m
-            Wavelengths to evaluate
-      reff: float, units of kpc
-            Source half-light radius.
-      amp: ignored
-            This parameter is ignored, it's only here so we can use the *exploder
-            in the likelihood function.
-      Tdust: float, units of K
-            Assumed dust temperature
-      L0: float, units of m
-            Wavelength at which the dust opacity is 1, ranges from ~40-400um.
-      beta: float, unitless
-            Dust emissivity spectral index, should range from ~0 to 4.
-      z: float, unitless
-            Source redshift, to subtract CMB emission and rescale source
-            ::reff:: into steradians from kpc.
-      cosmo: astropy cosmology thing
-            Default cosmology is Planck 2015 (paper XIII), but can be changed
-            by passing some other astropy cosmology FlatLambdaCDM object here.
-      
-      Returns:
-      gbb: array of floats, SI units of W m^-2 Hz^-1 [ie, mult by 1e29 to mJy]
-      """
-      
-      nu = c/lambdas
-      DA = 1e3*cosmo.angular_diameter_distance(z).value
-      tau = (L0/lambdas)**beta
-      deltaB = B_nu(nu,Tdust) - B_nu(nu,cosmo.Tcmb(z).value)
-      return 2*np.pi*reff**2. * deltaB * (1-np.exp(-tau)) / (DA**2 * (1+z)**3)
+
       

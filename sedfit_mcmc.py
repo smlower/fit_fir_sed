@@ -1,12 +1,12 @@
 import numpy as np
 import emcee
+from tqdm.auto import tqdm
 from scipy.special import erfc
 from fitting_functions import *
-from get_luminosity import *
-from get_dustmass import *
-from plotting_utils import *
-from astropy.cosmology import Planck15
+from get_luminosity import get_luminosity
+from get_dustmass import get_dustmass
 import astropy.units as u
+
 __all__ = ['calc_prior','calc_likelihood','sedfit_mcmc']
 
 def calc_prior(p,fitfunction, params):
@@ -102,7 +102,7 @@ def calc_likelihood(p,fitfunction,um_data,mjy_data,mjy_errors,params,fixed):
       
       
 def sedfit_mcmc(fitfunc,um_data,mjy_data,mjy_errors,p0=None,params=None,fixed=None,
-                plotfile='triangle.png',mcmcsteps=[100,100,100],nthreads=2,pool=None):
+                mcmcsteps=[100,100,100],nthreads=2,pool=None):
 
       """
       Perform the actual SED fitting, and save/output the results.
@@ -145,7 +145,7 @@ def sedfit_mcmc(fitfunc,um_data,mjy_data,mjy_errors,p0=None,params=None,fixed=No
             args=[fitfunc,um_data,mjy_data,mjy_errors,params,fixed],
             threads=nthreads,pool=pool)
       
-      print("Running sampler")
+
       for i,res in enumerate(sampler.sample(initials,iterations=nburn,storechain=False)):
             if (i+1)%50==0: print("step ",i+1,'/',nburn)
             pos,prob,rstate = res
@@ -156,41 +156,24 @@ def sedfit_mcmc(fitfunc,um_data,mjy_data,mjy_errors,p0=None,params=None,fixed=No
             if (i+1)%50==0: print('Chain step ',i+1,'/',nstep)
             
             
-      print("Mean acceptance fraction: {0:.3f}".format(100*sampler.acceptance_fraction.mean()))
-      
       chains,lnlike = sampler.flatchain, sampler.flatlnprobability
-      
+      print(f'log likelihood: {lnlike}')
       # Overwrite values which were fixed:
       for i,p in enumerate(fixed):
             if p: chains[:,i] = p
       DL = 10*u.pc
-      um_rest_ir = np.linspace(8.,1000.,400) * u.micron
-      fir = ((um_rest_ir.value>42.5) & (um_rest_ir.value<122.5))
-      LIR,LFIR,Tpeak,Mdust = [],[],[], []
+      um_rest_ir = np.linspace(8.,1000.,200) * u.micron
+      LIR,Mdust = [],[]
       print('getting LFIR')
-      for i in range(chains.shape[0]):
+      for i in tqdm(range(int(chains.shape[0]))):
             Sfit = fitfunc(um_rest_ir,*chains[i,:])
-            LIR.append(get_luminosity(Lambdas=um_rest_ir, lum=Sfit))
-            LFIR.append(get_luminosity(Lambdas=um_rest_ir[fir], lum=Sfit[fir]))
-            Tpeak.append(3e14/um_rest_ir[Sfit.value.argmax()]/58.79e9) # this version for Sfit in per-Hz mJy, courtesy dpm
-            Sfit_mJy = Sfit/((4. * np.pi * u.sr) * (10*u.pc).to(u.cm)**2 * (c / um_rest_ir.to(u.m)))
-            Mdust.append(get_dustmass((Sfit_mJy.value)*1e-13 *u.mJy, chains[i,params.index('Td')], chains[i,params.index('beta')]))
-      chains = np.c_[chains,LIR,LFIR,Tpeak,Mdust]
+            LIR.append(get_luminosity(Lambdas=um_rest_ir, lum=Sfit).value)
+            Mdust.append(get_dustmass(Sfit, um_rest_ir,chains[i,params.index('Td')], chains[i,params.index('beta')]))
+      imax = np.argmax(lnlike)
+      Sfit_best = fitfunc(um_rest_ir,*chains[imax,:])
+      chains = np.c_[chains,LIR,Mdust]
       
-      fits = np.median(chains,axis=0)
-      Sfit = []
-      for i in (um_rest_ir):
-                        Sfit.append(fitfunc(i,*fits[:len(params)]))
       a = np.percentile(chains,[15.87,84.13],axis=0)
       stds = np.abs(a[0,:] - a[1,:])/2.
-      if plotfile is not None:
-            freepars = np.where(np.asarray(fixed)==0)[0]
-            freepars = np.append(freepars,[-1, -4]) # plot luminosities and mass posteriors
-            if fitfunc.__name__ == 'greybody':
-                  labels = np.asarray(['Amplitude','$T_{dust}$','$\\lambda_0$ ($\\mu$m)','$\\beta$','L$_{IR}$ (10$^{12}$L$_\\odot$)','L$_{FIR}$ (10$^{12}$L$_\\odot$)','T$_{peak}$', 'M$_{dust}$'])
-            elif fitfunc.__name__ == 'greybody_powerlaw':
-                  labels = np.asarray(['Amplitude','$T_{dust}$','$\\lambda_0$ ($\\mu$m)','$\\beta$','$\\alpha_{pl}$','z','L$_{IR}$ (10$^{12}$L$_\\odot$)','L$_{FIR}$ (10$^{12}$L$_\\odot$)','T$_{peak}$'])    
-            make_outputplot(plotfile,chains[:,freepars],labels[freepars],plotsed=True,um_rest=um_rest_ir,
-                            Sfit=Sfit,um_data=um_data,mjy_data=mjy_data,mjy_errors=mjy_errors, z=z)
       
-      return chains,fits,stds,Sfit
+      return chains,stds,Sfit_best,um_rest_ir

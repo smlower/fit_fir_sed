@@ -1,9 +1,9 @@
-# kappa     nu_orig     beta  kappa_870   reference; method; as used by
-0.0431      352.        1.7   0.0414      # Li&Draine01-table6, beta not explicit but this line good for mm obs; used by Magdis+11
-3.13        3000.       2.0   0.0413      # Li&Draine01-table6, beta not explicit but this line good for FIR obs; used by Magnelli+12
-0.077       352.        1.5   0.077       # Dunne+00; averages values from Draine&Lee84 and Hughes+93; used by Fu+13, MAGPHYS (da Cunha+08)
-0.07        352.        1.5   0.07        # James+02; uses XCO=2.8e20 (alpha=6.0); used by Fu+13
-0.045       250.        2.0   0.085       # used by Greve+12; refs Hildebrand83, Kruegel&Siebenmorgen94
-0.0484      352.        1.8   0.0484      # Scoville+14; from planck maps assuming XCO=2e20 (alpha=4.5), but wraps up gdr. here i convert back with gdr=100
-3.44        3000.       1.75  0.078       # Ossenkopf&Henning94 (Tab. 1, low density MRN no ice version), beta not explicit, but this line good to a few percent out to 250um
-0.364       857.        2.0   0.060       # ", this line good to few percent from 250um-1.3mm
+kappa	nu_orig	beta	kappa_870	#reference
+0.0431	352.	1.7	0.0414     # 'Li&Draine01-table6, beta not explicit but this line good for mm obs; used by Magdis+11'
+3.13	3000.	2.0	0.0413     # 'Li&Draine01-table6, beta not explicit but this line good for FIR obs; used by Magnelli+12'
+0.077	352.	1.5	0.077      # 'Dunne+00; averages values from Draine&Lee84 and Hughes+93; used by Fu+13, MAGPHYS (da Cunha+08)'
+0.07	352.	1.5	0.07       # 'James+02; uses XCO=2.8e20 (alpha=6.0); used by Fu+13'
+0.045	250.	2.0	0.085      # 'used by Greve+12; refs Hildebrand83, Kruegel&Siebenmorgen94'
+0.0484	352.	1.8	0.0484     # 'Scoville+14; from planck maps assuming XCO=2e20 (alpha=4.5), but wraps up gdr. here i convert back with gdr=100'
+3.44	3000.	1.75	0.078      # 'Ossenkopf&Henning94 (Tab. 1, low density MRN no ice version), beta not explicit, but this line good to a few percent out to 250um'
+0.364	857.	2.0	0.060      # 'this line good to few percent from 250um-1.3mm'
